@@ -51,19 +51,19 @@ export function registerUploadRoutes(app: Express): void {
    */
   app.post("/api/uploads/request-url", (req: Request, res: Response) => {
     const userId = (req.session as any)?.userId;
-    if (\!userId) {
+    if (!userId) {
       return res.status(401).json({ error: "Authentication required" });
     }
 
     const { name, size, contentType } = req.body;
 
-    if (\!name) {
+    if (!name) {
       return res.status(400).json({ error: "Missing required field: name" });
     }
     if (size && Number(size) > MAX_FILE_SIZE) {
       return res.status(400).json({ error: "File too large. Maximum size is 5MB" });
     }
-    if (contentType && \!ALLOWED_TYPES.includes(contentType)) {
+    if (contentType && !ALLOWED_TYPES.includes(contentType)) {
       return res
         .status(400)
         .json({ error: "Invalid file type. Only JPEG, PNG, GIF, WebP allowed" });
@@ -101,14 +101,14 @@ export function registerUploadRoutes(app: Express): void {
       const { fileId } = req.params;
       const upload = pendingUploads.get(fileId);
 
-      if (\!upload) {
+      if (!upload) {
         return res.status(404).json({ error: "Upload token not found or expired" });
       }
       if (Date.now() > upload.expiresAt) {
         pendingUploads.delete(fileId);
         return res.status(410).json({ error: "Upload token expired" });
       }
-      if (\!Buffer.isBuffer(req.body) || req.body.length === 0) {
+      if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
         return res.status(400).json({ error: "No file data received" });
       }
 
