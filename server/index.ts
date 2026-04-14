@@ -56,7 +56,7 @@ const DATE_FIELDS = [
 ];
 
 function toCamelCase(obj: any): any {
-  if (obj === null || typeof obj \!== 'object') return obj;
+  if (obj === null || typeof obj !== 'object') return obj;
   if (Array.isArray(obj)) return obj.map(toCamelCase);
   return Object.keys(obj).reduce((result: any, key) => {
     const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -66,7 +66,7 @@ function toCamelCase(obj: any): any {
 }
 
 function normalizeRequestBody(obj: any): any {
-  if (obj === null || typeof obj \!== 'object') return obj;
+  if (obj === null || typeof obj !== 'object') return obj;
   if (Array.isArray(obj)) return obj.map(normalizeRequestBody);
 
   const camelCased = toCamelCase(obj);
