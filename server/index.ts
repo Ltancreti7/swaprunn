@@ -74,7 +74,7 @@ function normalizeRequestBody(obj: any): any {
   for (const field of DATE_FIELDS) {
     if (camelCased[field] && typeof camelCased[field] === 'string') {
       const date = new Date(camelCased[field]);
-      if (\!isNaN(date.getTime())) {
+      if (!isNaN(date.getTime())) {
         camelCased[field] = date;
       }
     }
