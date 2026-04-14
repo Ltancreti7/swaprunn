@@ -39,7 +39,7 @@ const pendingUploads = new Map<
 >();
 
 // Ensure uploads directory exists on startup
-if (\!fs.existsSync(UPLOADS_DIR)) {
+if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
   console.log(`[upload] Created uploads directory: ${UPLOADS_DIR}`);
 }
@@ -133,7 +133,7 @@ export function registerUploadRoutes(app: Express): void {
     const safeId = path.basename(req.params.fileId);
     const filePath = path.join(UPLOADS_DIR, safeId);
 
-    if (\!fs.existsSync(filePath)) {
+    if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: "File not found" });
     }
 
