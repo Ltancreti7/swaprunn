@@ -24,15 +24,12 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
         }
 
         if (permissionStatus.receive !== 'granted') {
-          console.log('Push notification permission denied');
           return;
         }
 
         await PushNotifications.register();
 
         PushNotifications.addListener('registration', async (token) => {
-          console.log('Push registration success, token:', token.value);
-          
           try {
             const response = await fetch('/api/push-tokens', {
               method: 'POST',
@@ -43,10 +40,8 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
                 platform: Capacitor.getPlatform(),
               }),
             });
-            
-            if (response.ok) {
-              console.log('Push token registered with server');
-            } else {
+
+            if (!response.ok) {
               console.error('Failed to register push token:', await response.text());
             }
           } catch (error) {
@@ -58,12 +53,11 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
           console.error('Push registration error:', error.error);
         });
 
-        PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          console.log('Push notification received:', notification);
+        PushNotifications.addListener('pushNotificationReceived', (_notification) => {
+          // handled silently; badge/alert shown natively by OS
         });
 
         PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-          console.log('Push notification action performed:', action);
           
           const data = action.notification.data;
           if (data?.type) {
