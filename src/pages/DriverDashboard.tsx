@@ -148,15 +148,9 @@ export function DriverDashboard() {
   };
 
   const handleDeclineDelivery = async (deliveryId: string) => {
-    console.log('handleDeclineDelivery called with:', deliveryId, 'driver:', driver?.id);
-    if (!driver) {
-      console.log('No driver found, returning');
-      return;
-    }
+    if (!driver) return;
     try {
-      console.log('Calling api.deliveries.decline');
       await api.deliveries.decline(deliveryId, driver.id);
-      console.log('Decline successful');
       showToast('Delivery declined', 'info');
       await loadRequestDeliveries(driver.id);
     } catch (err: any) {

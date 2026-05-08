@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Camera, Upload, X, Loader2 } from 'lucide-react';
+import { Camera, Upload, X, Loader2, AlertCircle } from 'lucide-react';
 
 interface DeliveryPhotoUploadProps {
   deliveryId: string;
@@ -25,8 +25,15 @@ async function jsonRequest<T>(url: string, options: RequestInit = {}): Promise<T
     credentials: 'include',
   });
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Request failed');
+    let errorMessage = `Request failed (${response.status})`;
+    try {
+      const contentType = response.headers.get('content-type') ?? '';
+      if (contentType.includes('application/json')) {
+        const error = await response.json();
+        errorMessage = error.error || error.message || errorMessage;
+      }
+    } catch { /* non-JSON error body — keep status-based message */ }
+    throw new Error(errorMessage);
   }
   return response.json();
 }
@@ -34,6 +41,7 @@ async function jsonRequest<T>(url: string, options: RequestInit = {}): Promise<T
 export function DeliveryPhotoUpload({ deliveryId, uploaderRole, onPhotoUploaded }: DeliveryPhotoUploadProps) {
   const [selectedType, setSelectedType] = useState('pickup');
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
   const [preview, setPreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -43,6 +51,7 @@ export function DeliveryPhotoUpload({ deliveryId, uploaderRole, onPhotoUploaded 
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setUploadError(null);
     setSelectedFile(file);
     const reader = new FileReader();
     reader.onload = (ev) => setPreview(ev.target?.result as string);
@@ -52,6 +61,7 @@ export function DeliveryPhotoUpload({ deliveryId, uploaderRole, onPhotoUploaded 
   const handleUpload = async () => {
     if (!selectedFile) return;
     setUploading(true);
+    setUploadError(null);
 
     try {
       const urlRes = await jsonRequest<{ uploadURL: string; objectPath: string }>('/api/uploads/request-url', {
@@ -65,11 +75,15 @@ export function DeliveryPhotoUpload({ deliveryId, uploaderRole, onPhotoUploaded 
 
       const { uploadURL, objectPath } = urlRes;
 
-      await fetch(uploadURL, {
+      const uploadRes = await fetch(uploadURL, {
         method: 'PUT',
         body: selectedFile,
         headers: { 'Content-Type': selectedFile.type },
       });
+
+      if (!uploadRes.ok) {
+        throw new Error('Failed to upload image to storage');
+      }
 
       await jsonRequest(`/api/deliveries/${deliveryId}/photos`, {
         method: 'POST',
@@ -88,7 +102,7 @@ export function DeliveryPhotoUpload({ deliveryId, uploaderRole, onPhotoUploaded 
 
       onPhotoUploaded();
     } catch (error) {
-      console.error('Photo upload failed:', error);
+      setUploadError(error instanceof Error ? error.message : 'Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -98,6 +112,7 @@ export function DeliveryPhotoUpload({ deliveryId, uploaderRole, onPhotoUploaded 
     setPreview(null);
     setSelectedFile(null);
     setCaption('');
+    setUploadError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -151,6 +166,13 @@ export function DeliveryPhotoUpload({ deliveryId, uploaderRole, onPhotoUploaded 
         className="hidden"
         data-testid="input-photo-file"
       />
+
+      {uploadError && (
+        <div className="flex items-center gap-2 p-3 bg-red-900/40 border border-red-700 rounded-md text-red-300 text-sm" data-testid="upload-error">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{uploadError}</span>
+        </div>
+      )}
 
       {preview && (
         <>

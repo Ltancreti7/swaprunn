@@ -21,7 +21,8 @@ export const validateEmail = (email: string): { isValid: boolean; message: strin
     return { isValid: false, message: '' };
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Requires local-part, @, domain with at least one dot, and a TLD of 2+ chars
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
 
   if (!emailRegex.test(email)) {
     return { isValid: false, message: 'Please enter a valid email address' };
